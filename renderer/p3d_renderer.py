@@ -97,7 +97,7 @@ class Pytorch3dRenderer(object):
         return renderer
     
 
-    def render(self, verts, faces, bg_img):
+    def render(self, verts, faces, bg_img, ft, vt, t):
         verts = verts.copy()
         faces = faces.copy()
 
@@ -150,11 +150,18 @@ class Pytorch3dRenderer(object):
         verts[:, 2] += 5
 
         verts_tensor = torch.from_numpy(verts).float().unsqueeze(0).cuda()
-        faces_tensor = torch.from_numpy(faces.copy()).long().unsqueeze(0).cuda()
+        faces_tensor = torch.from_numpy(faces.astype(np.int32)).long().unsqueeze(0).cuda()
+        maps_tensor = torch.from_numpy(t).float().unsqueeze(0).cuda()
+        faces_uvs_tensor = torch.from_numpy(ft.astype(np.int64)).long().unsqueeze(0).cuda()
+        verts_uvs_tensor = torch.from_numpy(vt).float().unsqueeze(0).cuda()
 
         # set color
-        mesh_color = self.mesh_color.repeat(1, verts.shape[0], 1)
-        textures = Textures(verts_rgb = mesh_color)
+        # mesh_color = self.mesh_color.repeat(1, verts.shape[0], 1)
+        textures = Textures(
+            maps=maps_tensor,
+            faces_uvs=faces_uvs_tensor,
+            verts_uvs=verts_uvs_tensor,
+        )
 
         # rendering
         mesh = Meshes(verts=verts_tensor, faces=faces_tensor, textures=textures)
